@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(
-  MaterialApp(
-    home: Scaffold(
-      // appBar: AppBar(
-      //   title: Text('Transferências'),
-      // ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => {},
-        child: Icon(Icons.add),
-      ),
-      body: FormularioDeTransferencia(),
-    ),
-  ),
-);
+void main() => runApp(BytebankApp());
+
+class BytebankApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(home: Scaffold(
+      body: ListaTransferencias()
+    ),);
+  }
+}
+
+class Header extends AppBar {
+  Header(String titulo) : super(title: Text(titulo));
+}
 
 /******************* FORMULARIO DE TRANSFERENCIA ********************/
 
@@ -31,29 +31,34 @@ class FormularioDeTransferencia extends StatelessWidget {
         Editor(_controladorCampoValor, 'Número da conta', '0000', icone: Icons.monetization_on),
         RaisedButton(
           child: Text('Confirmar'),
-          onPressed: () {
-            debugPrint('clicou no confirmar');
-            int? numeroConta = int.tryParse(_controladorCampoNumeroConta.text);
-            double? valor = double.tryParse(_controladorCampoValor.text);
-
-            if(numeroConta != null && valor != null){
-              final transferenciaCriada = Transferencia(valor, numeroConta);
-              debugPrint('$transferenciaCriada');
-            }
-          },
+          onPressed: () => _criaTransferencia(context),
         ),
       ],),
     );
   }
+
+
+  void _criaTransferencia(BuildContext context) {
+    debugPrint('clicou no confirmar');
+    int? numeroConta = int.tryParse(_controladorCampoNumeroConta.text);
+    double? valor = double.tryParse(_controladorCampoValor.text);
+
+    if(numeroConta != null && valor != null){
+      final transferenciaCriada = Transferencia(valor, numeroConta);
+      debugPrint('$transferenciaCriada');
+      Navigator.pop(context, transferenciaCriada);
+    }
+  }
 }
 
+// ignore: must_be_immutable
 class Editor extends StatelessWidget {
   final TextEditingController _controller;
   final String _rotulo;
   final String _dica;
   IconData? icone;
 
-  Editor(this._controller, this._rotulo, this._dica, {this.icone})
+  Editor(this._controller, this._rotulo, this._dica, {this.icone});
 
   @override
   Widget build(BuildContext context) {
@@ -77,15 +82,29 @@ class Editor extends StatelessWidget {
 
 /******************* LISTA DE TRANSFERENCIA ********************/ 
 
-class ListaTransferencias extends StatelessWidget{
+class ListaTransferencias extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
+    return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () {
+          final Future<Transferencia?> future = Navigator.push(context, MaterialPageRoute(builder: (ctx) {
+            return FormularioDeTransferencia();
+          }));
+          future.then((transferenciaRecebida) {
+            debugPrint('chegou no then do future');
+            debugPrint('$transferenciaRecebida');
+          });
+        }
+      ),
+      appBar: Header('transferência'),
+      body: Column(children: [
       ItemTransferencia(Transferencia(1000.5, 1004)),
       ItemTransferencia(Transferencia(1000.4, 1003)),
-      ItemTransferencia(Transferencia(1000.3, 1001)),
-      ItemTransferencia(Transferencia(1000.2, 1002))
-    ],);
+      ItemTransferencia(Transferencia(1000.3, 1001))
+    ],), 
+    );
   }
 }
 
@@ -118,3 +137,38 @@ class ItemTransferencia extends StatelessWidget {
     );
   }
 }
+
+// class ListaDeTransferenciaState extends State<ListaTransferencias> {
+//   List<Transferencia> _transferencias = [];
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text('Trasferencias'),
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         child: Icon(Icons.add),
+//         onPressed: () {
+//           Future<Transferencia?> future = Navigator.push(context, MaterialPageRoute(builder: (ctx)) {
+//             return FormularioDeTransferencia();
+//           });
+
+//           future.then((transferenciaParaAdicionar) {
+//             debugPrint('Recebeu a transferencia para adicionar na lista: $transferenciaParaAdicionar');
+          
+//             if (transferenciaParaAdicionar != null) {
+//               setState(() {
+//                 _transferencias.add(transferenciaParaAdicionar)
+//               });
+//             }
+//           });
+//         },
+//       ),
+//       body: ListView.builder(itemBuilder: (ctx, index) {
+//         Transferencia transferencia = _transferencias[index];
+//         return ItemTransferencia(transferencia, Icons.monetization_on);
+//       })
+//     );
+//   }
+// }
